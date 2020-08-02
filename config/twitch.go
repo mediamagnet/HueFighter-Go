@@ -5,4 +5,5 @@ type TwitchConfiguration struct {
 	Channel     string
 	OAuth       string
 	ChannelName string
+	User 		string
 }

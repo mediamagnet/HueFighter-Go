@@ -2,7 +2,8 @@ package main
 
 import (
 	"Huefighter-go/config"
-	"github.com/jrm780/gotirc"
+	"fmt"
+	"github.com/gempir/go-twitch-irc/v2"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -16,11 +17,28 @@ func main() {
 	var cfg config.Configuration
 
 	if err := viper.ReadInConfig(); err != nil {
-		logrus.Fatal("Error reading config file, %s", err)
+		logrus.Fatalf("Error reading config file, %s", err)
 	}
 	err := viper.Unmarshal(&cfg)
 	if err != nil {
-		logrus.Fatal("unable to decode into struct, %v", err)
+		logrus.Fatalf("unable to decode into struct, %v", err)
 	}
 
+	client := twitch.NewClient(cfg.Twitch.User, cfg.Twitch.OAuth)
+	fmt.Println(cfg.Twitch.User)
+	// client := twitch.NewAnonymousClient()
+
+	client.OnPrivateMessage(func(message twitch.PrivateMessage) {
+		logrus.Infof("[%s, %s] %s \n", message.User, message.User.Color, message.Message)
+	})
+
+	client.Join("#mediamagnet")
+	client.OnConnect()
+
+	err = client.Connect()
+	if err != nil {
+		logrus.Panic(err)
+	}
 }
+
+
