@@ -10,6 +10,8 @@ import (
 	"github.com/spf13/viper"
 	"math/rand"
 	"strconv"
+	"strings"
+	"time"
 )
 
 func Fighter() {
@@ -80,6 +82,31 @@ func Fighter() {
 		}
 		log.Debugln(LState)
 		LColor = make([]float32, 0)
+		if strings.Contains(message.Message, "!alert") {
+			for i := 0; i < 15; i++ {
+				_, err := bridge.SetGroupState(cfg.Bridge.GroupNumber, huego.State{
+					On: true,
+					Bri: uint8(255),
+					Sat: uint8(255),
+					TransitionTime: 5,
+				})
+				if err != nil {
+					log.Warn("Could not set group state")
+				}
+				time.Sleep(500 * time.Millisecond)
+				_, err = bridge.SetGroupState(cfg.Bridge.GroupNumber, huego.State{
+					On: false,
+					TransitionTime: 5,
+				})
+				if err != nil {
+					log.Warn("Could not set group state")
+				}
+				time.Sleep(500 * time.Millisecond)
+			}
+			_, _ = bridge.SetGroupState(cfg.Bridge.GroupNumber, huego.State{
+				On: true,
+			})
+		}
 	})
 
 	client.OnConnect(func() {
