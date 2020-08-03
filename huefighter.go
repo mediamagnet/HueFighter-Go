@@ -2,79 +2,73 @@ package main
 
 import (
 	"Huefighter-go/config"
+	"Huefighter-go/hue"
+	"flag"
+	"fmt"
 	"github.com/amimof/huego"
-	"github.com/gempir/go-twitch-irc/v2"
-	"github.com/lucasb-eyer/go-colorful"
-	"github.com/sirupsen/logrus"
+
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+
 )
+
+func init() {
+	log.SetLevel(log.InfoLevel)
+}
 
 func main() {
 
-	var LColor []float32
+	listCFG := flag.Bool("list", false, "List detected Lights and exit")
+	groupSet := flag.Bool("new", false, "Setup a group of lights")
+	groupName := flag.String("name", "", "Name of the light group")
+	groupID := flag.Int("id", 0, "ID of the Light group")
 
 	viper.SetConfigName("config")
 	viper.SetConfigType("toml")
 	viper.AddConfigPath(".")
 
-
-
 	var cfg config.Configuration
 
 	if err := viper.ReadInConfig(); err != nil {
-		logrus.Fatalf("Error reading config file, %s", err)
+		log.Fatalf("Error reading config file, %s", err)
 	}
 	err := viper.Unmarshal(&cfg)
 	if err != nil {
-		logrus.Fatalf("unable to decode into struct, %v", err)
+		log.Fatalf("unable to decode into struct, %v", err)
 	}
 
 	bridge := huego.New(cfg.Bridge.IP, cfg.Bridge.User)
 	light, err := bridge.GetLights()
 	if err != nil {
-		logrus.Panic(err)
+		log.Panic(err)
 	}
-	bridge.SetLightState(3, huego.State{
-		On: true,
-		Bri: 255,
-		Sat: 255,
-		HueInc: 255,
-	})
+	flag.Parse()
 
-	client := twitch.NewClient(cfg.Twitch.User, cfg.Twitch.OAuth)
-	// client := twitch.NewAnonymousClient()
+	if *listCFG {
+		lightc := 0
+		for i := 0; i < len(light)+5; i++ {
+			light, _ := bridge.GetLight(lightc)
 
-	client.OnPrivateMessage(func(message twitch.PrivateMessage) {
-		// logrus.Printf("[%v, %v] %v \n", message.User.DisplayName, message.User.Color, message.Message)
-		c, _ := colorful.Hex(message.User.Color)
-		cx, cy, cy2 := c.Xyy()
-		// logrus.Printf("color CIE: %v, %v, %v \n", cx, cy, cy2)
+			log.Infof("Light ID: %v, Light Name: %v", light.ID, light.Name)
+			lightc += 1
 
-		LColor = append(LColor, float32(cx))
-		LColor = append(LColor, float32(cy))
-		LState, err := bridge.SetLightState(3, huego.State{
-			On:             true,
-			Bri:            uint8(cy2),
-			Xy:             LColor,
-			TransitionTime: 1,
+		}
+		fmt.Println("Pick the lights you want to add to the group then add them to your config.toml under bridge in LightGroup.")
+
+	} else if *groupSet {
+		log.Infof("Creating group using lights: %v", cfg.Bridge.LightGroup)
+		group, err := bridge.CreateGroup(huego.Group{
+			Name:       *groupName,
+			Lights:     cfg.Bridge.LightGroup,
+			ID:         *groupID,
 		})
 		if err != nil {
-			logrus.Error(err)
+			log.Warn(err)
 		}
-		logrus.Debugln(LState)
-		LColor = make([]float32, 0)
-	})
-
-	client.OnConnect(func() {
-		client.Join(cfg.IRC.Channel)
-		logrus.Infof("%s connected and monitoring %v lights", cfg.Twitch.User, len(light))
-		// client.Say(cfg.IRC.Channel, fmt.Sprintf("HueFighter-Go Connected and working with %v lights.", len(light)))
-	})
-
-
-	err = client.Connect()
-	if err != nil {
-		logrus.Panic(err)
+		log.Printf("Group %v created", group)
+		fmt.Println("Please add the above group ID to your config.toml under bridge GroupNumber")
+	} else {
+		hue.Fighter()
 	}
 }
 
