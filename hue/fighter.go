@@ -57,9 +57,10 @@ func Fighter() {
 
 	client := twitch.NewClient(cfg.Twitch.User, cfg.Twitch.OAuth)
 
-
+// TODO: moderator role and broadcaster role add for commands
 	client.OnPrivateMessage(func(message twitch.PrivateMessage) {
 		log.Infof("[%v, %v] %v \n", message.User.DisplayName, message.User.Color, message.Message)
+		log.Infoln(message.User.Badges)
 		c, _ := colorful.Hex(message.User.Color)
 		cx, cy, cy2 := c.Xyy()
 		log.Infof("color CIE: %v, %v, %v \n", cx, cy, cy2)
@@ -82,30 +83,48 @@ func Fighter() {
 		}
 		log.Debugln(LState)
 		LColor = make([]float32, 0)
-		if strings.Contains(message.Message, "!alert") {
-			for i := 0; i < 15; i++ {
-				_, err := bridge.SetGroupState(cfg.Bridge.GroupNumber, huego.State{
+		moderator := message.User.Badges["moderator"]
+		broadcaster := message.User.Badges["broadcaster"]
+		if moderator == 1 || broadcaster == 1 {
+
+			switch {
+			case strings.Contains(message.Message, "!alert"):
+				for i := 0; i < 15; i++ {
+					_, err := bridge.SetGroupState(cfg.Bridge.GroupNumber, huego.State{
+						On:             true,
+						Bri:            uint8(255),
+						Sat:            uint8(255),
+						TransitionTime: 5,
+					})
+					if err != nil {
+						log.Warn("Could not set group state")
+					}
+					time.Sleep(500 * time.Millisecond)
+					_, err = bridge.SetGroupState(cfg.Bridge.GroupNumber, huego.State{
+						On:             false,
+						TransitionTime: 5,
+					})
+					if err != nil {
+						log.Warn("Could not set group state")
+					}
+					time.Sleep(500 * time.Millisecond)
+				}
+				_, _ = bridge.SetGroupState(cfg.Bridge.GroupNumber, huego.State{
 					On: true,
-					Bri: uint8(255),
-					Sat: uint8(255),
-					TransitionTime: 5,
 				})
-				if err != nil {
-					log.Warn("Could not set group state")
-				}
-				time.Sleep(500 * time.Millisecond)
-				_, err = bridge.SetGroupState(cfg.Bridge.GroupNumber, huego.State{
-					On: false,
-					TransitionTime: 5,
+			case strings.Contains(message.Message, "!reset"):
+				var white []float32
+				white = append(white, 0.34510, 0.35811)
+				log.Printf("Resetting")
+				time.Sleep(1*time.Second)
+				bridge.SetGroupState(8, huego.State{
+					On:     		true,
+					Bri:		    255,
+					Xy:				white,
+					TransitionTime: 0,
 				})
-				if err != nil {
-					log.Warn("Could not set group state")
-				}
-				time.Sleep(500 * time.Millisecond)
 			}
-			_, _ = bridge.SetGroupState(cfg.Bridge.GroupNumber, huego.State{
-				On: true,
-			})
+
 		}
 	})
 
