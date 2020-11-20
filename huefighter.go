@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/amimof/huego"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -22,10 +23,18 @@ func main() {
 	groupSet := flag.Bool("new", false, "Setup a group of lights")
 	groupName := flag.String("name", "", "Name of the light group")
 	groupID := flag.Int("id", 0, "ID of the Light group")
+	configFile := flag.String("config", "config.toml", "location of config file.")
 
-	viper.SetConfigName("config")
+	flag.Parse()
+
+	configName := strings.Split(*configFile, ".")
+
+	fmt.Println(configName)
+
+
+	viper.SetConfigName(configName[0])
 	viper.SetConfigType("toml")
-	viper.AddConfigPath(".")
+	viper.SetConfigFile(*configFile)
 
 	var cfg config.Configuration
 
@@ -42,7 +51,7 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
-	flag.Parse()
+
 
 	if *listCFG {
 		lightc := 0

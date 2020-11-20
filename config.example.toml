@@ -1,0 +1,18 @@
+title = "Huefighter config file"
+
+[Twitch]
+    Channel = "Channel code"
+    OAuth = "Bot OAUTH"
+    User = "Bot's Name"
+
+[IRC]
+    Server = "irc.chat.twitch.tv"
+    Port = 6667
+    Channel = "channel to connect to in irc without #"
+    Nick = "Bot's IRC nick"
+
+[Bridge]
+    IP = "IP of bridge"
+    User = "Bridge Username"
+    LightGroup = ["3", "9"] # Light's to use with group (get with huefighter --lights) 
+    GroupNumber = 9 #after running huefighter --groupset set group number here
