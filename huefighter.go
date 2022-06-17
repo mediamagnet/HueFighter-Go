@@ -10,6 +10,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+  "github.com/akualab/dmx"
 
 )
 
@@ -24,13 +25,24 @@ func main() {
 	groupName := flag.String("name", "", "Name of the light group")
 	groupID := flag.Int("id", 0, "ID of the Light group")
 	configFile := flag.String("config", "config.toml", "location of config file.")
+  dmxDev := flag.String("dev", "/dev/ttyUSB0", "Location of DMX Controller.")
+  dmxGroup := flag.Int("lights", 0, "How many Addressable dmx lights")
+  dmxMode := flag.Bool("dmx", false, "Control DMX Lights.")
+  dmxRed := flag.String("red", "1,2", "Lights that are red.")
+  dmxGreen := flag.String("green", "3,4", "Lights that are green.")
+  dmxBlue := flag.String("blue", "5,6", "Lights that are blue.")
 
 	flag.Parse()
-
+  dmxDevice := string(*dmxDev)
 	configName := strings.Split(*configFile, ".")
 
 	fmt.Println(configName)
+  dmx, e := dmx.NewDMXConnection(dmxDevice)
+  if e != nil {
+    log.Fatal(e)
+  }
 
+  println(dmxGroup, dmxMode, dmxRed, dmxGreen, dmxBlue, dmx)
 
 	viper.SetConfigName(configName[0])
 	viper.SetConfigType("toml")
@@ -76,7 +88,9 @@ func main() {
 		}
 		log.Printf("Group %v created", group)
 		fmt.Println("Please add the above group ID to your config.toml under bridge GroupNumber")
-	} else {
+  } else if *dmxMode {
+    hue.FightDMX()
+  }else {
 		hue.Fighter()
 	}
 }

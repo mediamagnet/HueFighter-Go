@@ -16,3 +16,10 @@ title = "Huefighter config file"
     User = "Bridge Username"
     LightGroup = ["3", "9"] # Light's to use with group (get with huefighter --lights) 
     GroupNumber = 9 #after running huefighter --groupset set group number here
+[DMX]
+    Dev = "Device location"
+    LightCount = "Number of lights addressable"
+    LightRed = ["Channel", "Number"] # Channel numbers of red lights.
+    LightGreen = ["Channel", "Number"]
+    LightBlue = ["Channel", "Number"]
+    LightRGB = ["Channel", "Number"]

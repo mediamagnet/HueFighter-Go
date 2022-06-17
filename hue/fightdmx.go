@@ -16,7 +16,7 @@ import (
 )
 
 // Fighter does the thing that makes the colors change
-func Fighter() {
+func FightDMX() {
 
 	var LColor []float32
 
