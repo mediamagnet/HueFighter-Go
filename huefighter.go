@@ -89,7 +89,7 @@ func main() {
 		log.Printf("Group %v created", group)
 		fmt.Println("Please add the above group ID to your config.toml under bridge GroupNumber")
   } else if *dmxMode {
-    hue.FightDMX()
+    hue.FightDMX(dmxDev)
   }else {
 		hue.Fighter()
 	}
